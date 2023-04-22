@@ -1,0 +1,65 @@
+version: '3.9'
+networks:
+  ms-net:
+    name: ms-net
+services:
+  nt-rabbitmq:
+    image: rabbitmq:3-management
+    container_name: nt-rabbitmq
+    restart: always
+    networks:
+      - ms-net
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      - RABBITMQ_DEFAULT_USER=rabbitmq
+      - RABBITMQ_DEFAULT_PASS=1jj395qu
+  mongo:
+    image: mongo:6.0.3
+    container_name: mongo
+    restart: always
+    networks:
+      - ms-net
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=p@ssw0rd2023
+      - MONGO_INITDB_DATABASE=node-rest-api
+    ports:
+      - 27017:27017
+  service-auth:
+    build: ./service-auth/
+    container_name: service-auth
+    restart: always
+    networks:
+      - ms-net
+    ports:
+      - 8000:8000
+    depends_on:
+      - mongo
+      - nt-rabbitmq
+    environment:
+      - PORT=8000
+      - MONGO_USER=root
+      - MONGO_PASS=p@ssw0rd2023
+      - MONGO_DATABASE=rest-api
+      - MONGO_IP=mongo
+      - MONGO_PORT=27017
+      - MONGO_AUTH=admin
+      - MONGO_TIMEOUT=30000
+      - RABBITMQ_URL=amqp://rabbitmq:1jj395qu@nt-rabbitmq:5672
+  service-mail:
+    build: ./service-mail/
+    container_name: service-mail
+    restart: always
+    networks:
+      - ms-net
+    ports:
+      - 8001:8001
+    environment:
+      - GMAIL_USERNAME=<required>
+      - GMAIL_PASSWORD=<required>
+      - RABBITMQ_URL=amqp://rabbitmq:1jj395qu@nt-rabbitmq:5672
+    depends_on:
+      - nt-rabbitmq
+      - service-auth
