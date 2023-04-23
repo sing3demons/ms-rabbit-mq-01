@@ -9,12 +9,10 @@ RUN npm install
 COPY . .
 
 RUN npm run build
-# RUN rm -rf src
 
 FROM node:alpine3.17
 
 ENV NODE_ENV production
-# USER node
 
 WORKDIR /app/service-auth
 
@@ -25,5 +23,5 @@ RUN npm install --production
 COPY --from=builder /app/service-auth/dist ./dist
 RUN npm i pm2 -g
 
-EXPOSE 8080
+EXPOSE 8000
 CMD [ "pm2-runtime","start", "dist/app.js" ]

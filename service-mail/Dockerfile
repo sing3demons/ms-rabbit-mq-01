@@ -16,6 +16,6 @@ WORKDIR /
 
 COPY --from=build /go/bin/app /app
 
-EXPOSE 8001
+EXPOSE 8080
 
 ENTRYPOINT ["/app"]

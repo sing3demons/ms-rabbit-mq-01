@@ -1,14 +1,18 @@
 import amqp from 'amqplib'
 import logger from '../utils/logger'
 
+let channel: amqp.Channel | undefined
+
 async function connectQueue(): Promise<amqp.Channel | undefined> {
   try {
     const url: string = process.env.RABBITMQ_URL!
     const connection = await amqp.connect(url)
-    const channel = await connection.createChannel()
+     channel = await connection.createChannel()
 
     const queue = 'mail-queue'
+    await channel.assertExchange('ex.sing.fanout', 'fanout', { durable: false })
     await channel.assertQueue(queue, { durable: false })
+    await channel.bindQueue(queue, 'ex.sing.fanout', '')
 
     return channel
   } catch (error) {

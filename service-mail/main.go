@@ -3,9 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"net/smtp"
+	"net/url"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -84,6 +88,7 @@ func ConsumeRabbitMQ(conn *amqp.Connection) {
 				json.Unmarshal(d.Body, &user)
 				fmt.Println(user)
 				sendGoMail(user.ID, user.Email)
+				sendLineNoti()
 			}
 
 			// fmt.Printf("Done")
@@ -91,4 +96,33 @@ func ConsumeRabbitMQ(conn *amqp.Connection) {
 		}
 	}()
 	<-forever
+}
+
+func sendLineNoti() {
+	endpoint := os.Getenv("LINE_URL_NOTIFY")
+	token := os.Getenv("LINE_TOKEN")
+
+	data := url.Values{
+		"message": {"Hello, world"},
+	}
+
+	req, err := http.NewRequest(http.MethodPost, endpoint, strings.NewReader(data.Encode()))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	req.Header.Add("Authorization", "Bearer "+token)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(string(body))
 }
