@@ -6,6 +6,7 @@ const userSchema = new Schema(
     email: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     password: { type: String, required: true },
+    role: { type: String, default: 'user', enum: ['user', 'admin'] },
   },
   {
     timestamps: {
@@ -19,6 +20,7 @@ export interface UserInput {
   email: string
   name: string
   password: string
+  role: string
 }
 
 export interface UserDocument extends UserInput, Document {
@@ -45,7 +47,6 @@ userSchema.pre('save', async function (next) {
 
 userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
   const user = this as UserDocument
-
   return bcrypt.compare(candidatePassword, user.password).catch((e) => false)
 }
 

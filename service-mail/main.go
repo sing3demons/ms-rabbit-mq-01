@@ -87,7 +87,7 @@ func ConsumeRabbitMQ(conn *amqp.Connection) {
 				user := User{}
 				json.Unmarshal(d.Body, &user)
 				fmt.Println(user)
-				sendGoMail(user.ID, user.Email)
+				// sendGoMail(user.ID, user.Email)
 				sendLineNoti()
 			}
 

@@ -7,7 +7,7 @@ async function connectQueue(): Promise<amqp.Channel | undefined> {
   try {
     const url: string = process.env.RABBITMQ_URL!
     const connection = await amqp.connect(url)
-     channel = await connection.createChannel()
+    channel = await connection.createChannel()
 
     const queue = 'mail-queue'
     await channel.assertExchange('ex.sing.fanout', 'fanout', { durable: false })
@@ -33,14 +33,16 @@ const consumeMessage = async (channel: amqp.Channel | undefined) => {
   }
 }
 
-const sendToQueue = async (channel: amqp.Channel | undefined, msg: object) => {
+const sendToQueue = async (type: string, msg: object) => {
   try {
     const queue = 'mail-queue'
-    await channel?.assertQueue(queue, { durable: false })
+    const as = await channel?.assertQueue(queue, { durable: false })
+    console.log(as)
+
     channel?.sendToQueue(queue, Buffer.from(JSON.stringify(msg)), {
       contentType: 'application/json',
       contentEncoding: 'utf-8',
-      type: 'Created',
+      type,
       persistent: true,
     })
   } catch (error) {
