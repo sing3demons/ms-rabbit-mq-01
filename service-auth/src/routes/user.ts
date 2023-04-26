@@ -2,40 +2,16 @@ import { Request, Response, Router } from 'express'
 import UserModel from '../model/user'
 import JSONResponse from '../utils/response'
 import { User } from '../type'
+import { deleteUser, getUser, getUsers } from '../user/user.controller'
 
 const router = Router({ caseSensitive: true })
 
-router.get('/', async (req: Request, res: Response) => {
-  const data: User[] = await UserModel.find({})
-  const users: User[] = []
-  for (const { _id, name, email,role, createdAt, updatedAt } of data) {
-    users.push({ _id, name, email, role, createdAt, updatedAt })
-  }
+router.get('/', getUsers)
 
-  JSONResponse.success(req, res, 'success', users)
-})
+router.get('/:id', getUser)
 
-router.get('/:id', async (req: Request, res: Response) => {
-  const data: User | null = await UserModel.findById(req.params.id)
+// router.patch('/:id', async (req: Request, res: Response) => {})
 
-  if (!data) {
-    JSONResponse.notFound(req, res, 'User not found')
-    return
-  }
-
-  const { _id, name, email, createdAt, updatedAt } = data
-  JSONResponse.success(req, res, 'success', { _id, name, email, createdAt, updatedAt })
-})
-
-router.delete('/:id', async (req: Request, res: Response) => {
-  const result = await UserModel.findByIdAndDelete(req.params.id)
-
-  if (!result) {
-    JSONResponse.notFound(req, res, 'User not found')
-    return
-  }
-
-  JSONResponse.success(req, res, 'delete')
-})
+router.delete('/:id', deleteUser)
 
 export default router

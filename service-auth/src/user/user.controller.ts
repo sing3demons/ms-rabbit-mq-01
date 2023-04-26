@@ -1,58 +1,99 @@
-import UserModel from '../model/user'
 import { sendToQueue } from '../rabbitmq'
-import { Register, ResponseUser, User } from '../type'
+import { User } from '../type'
 import JSONResponse from '../utils/response'
 import { Request, Response } from 'express'
-import { userSchema } from './user.interface'
+import { loginSchema, userSchema } from './user.interface'
+import { CreateUser, DeleteUser, GetUserById, GetUsers, SignIn } from './user.service'
 
-const signup = async (req: Request, res: Response) => {
+const signUp = async (req: Request, res: Response) => {
   try {
-    const { error } = userSchema.validate(req.body)
+    const { value, error } = userSchema.validate(req.body)
     if (error) {
-      console.error(error.details)
       error.details.forEach(() => {
         throw new Error('bad request')
       })
     }
 
-    const body: Register = req.body
-    const exist = await UserModel.findOne({ email: body.email })
-    if (exist) {
-      JSONResponse.badRequest(req, res, 'username or password invalid')
-      return
+    const result: User | undefined = await CreateUser(value)
+    if (!result) {
+      throw new Error('bad request')
     }
-    const result = await UserModel.create(body)
-
-    const user: User = ResponseUser(
-      result._id,
-      result.name,
-      result.email,
-      result.role,
-      result.createdAt,
-      result.updatedAt
-    )
-
-    // const user: User = {
-    //   _id: result._id,
-    //   name: result.name,
-    //   email: result.email,
-    //   role: result.role,
-    //   createdAt: result.createdAt,
-    //   updatedAt: result.updatedAt,
-    // }
 
     const type: string = 'Created'
-    await sendToQueue(type, user)
-    JSONResponse.create(req, res, type, result._id)
-  } catch (error) {
-    if (error instanceof Error) {
-      if (error.message === 'bad request') {
-        JSONResponse.badRequest(req, res, error.message)
-        return
-      }
-      JSONResponse.serverError(req, res, error.message)
+    await sendToQueue(type, result)
+    JSONResponse.create(req, res, type, result)
+  } catch (error: any) {
+    if (error === 'bad request') {
+      JSONResponse.badRequest(req, res, error)
+      return
+    } else {
+      JSONResponse.serverError(req, res, error)
     }
   }
 }
 
-export { signup }
+const signIn = async (req: Request, res: Response) => {
+  try {
+    const { value, error } = loginSchema.validate(req.body)
+    if (error) {
+      error.details.forEach(() => {
+        throw new Error('bad request')
+      })
+    }
+
+    const token = await SignIn(value)
+    if (!token) {
+      throw new Error('username or password invalid')
+    }
+
+    JSONResponse.success(req, res, 'success', token)
+  } catch (error) {
+    if (error === 'bad request') {
+      JSONResponse.badRequest(req, res, error)
+      return
+    } else if (error === 'username or password invalid') {
+      JSONResponse.badRequest(req, res, 'username or password invalid')
+    } else {
+      JSONResponse.serverError(req, res, 'system error')
+    }
+  }
+}
+
+const getUsers = async (req: Request, res: Response) => {
+  try {
+    const users: User[] | [] = await GetUsers(req)
+    JSONResponse.success(req, res, 'success', users)
+  } catch (error) {
+    JSONResponse.serverError(req, res, 'system error')
+  }
+}
+
+const getUser = async (req: Request, res: Response) => {
+  try {
+    const user = await GetUserById(req)
+    if (!user) {
+      JSONResponse.notFound(req, res, 'Not found')
+      return
+    }
+    const { _id, name, email, createdAt, updatedAt } = user
+    JSONResponse.success(req, res, 'success', { _id, name, email, createdAt, updatedAt })
+  } catch (error) {
+    JSONResponse.serverError(req, res, 'system error')
+  }
+}
+
+const deleteUser = async (req: Request, res: Response) => {
+  try {
+    const result = await DeleteUser(req)
+    if (!result) {
+      JSONResponse.notFound(req, res, 'User not found')
+      return
+    }
+
+    JSONResponse.success(req, res, 'delete')
+  } catch (error) {
+    JSONResponse.serverError(req, res, 'system error')
+  }
+}
+
+export { signUp, signIn, getUsers, getUser, deleteUser }

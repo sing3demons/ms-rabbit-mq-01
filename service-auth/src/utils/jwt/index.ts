@@ -1,13 +1,10 @@
 import jwt from 'jsonwebtoken'
 import { NextFunction, Request, Response } from 'express'
 
-import { User } from '../../type'
+import { Token, User } from '../../type'
 import JSONResponse from '../response'
 
-interface Token {
-  access_token: string
-  refresh_token: string
-}
+
 
 function generateJWT(user: User): Promise<Token> | undefined {
   return new Promise<Token>((resolve, reject) => {
