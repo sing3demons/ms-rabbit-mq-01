@@ -1,7 +1,4 @@
-import { Request, Response, Router } from 'express'
-import UserModel from '../model/user'
-import JSONResponse from '../utils/response'
-import { User } from '../type'
+import { Router } from 'express'
 import { deleteUser, getUser, getUsers } from '../user/user.controller'
 
 const router = Router({ caseSensitive: true })
