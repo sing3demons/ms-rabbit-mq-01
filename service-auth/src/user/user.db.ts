@@ -20,14 +20,14 @@ export async function createUser(user: Register) {
 
 export async function getUsers(filter: Object) {
   try {
-    return await UserModel.find(filter)
+    return await UserModel.find(filter).select('name email role').exec()
   } catch (error: any) {
     throw error.message
   }
 }
 export async function findByUserId(id: string) {
   try {
-    return await UserModel.findById(id)
+    return await UserModel.findById(id).select('name email role').exec()
   } catch (error: any) {
     throw error.message
   }

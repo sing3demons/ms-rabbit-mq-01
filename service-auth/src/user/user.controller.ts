@@ -70,13 +70,13 @@ const getUsers = async (req: Request, res: Response) => {
 
 const getUser = async (req: Request, res: Response) => {
   try {
-    const user = await GetUserById(req)
+    const user: User | null = await GetUserById(req)
     if (!user) {
       JSONResponse.notFound(req, res, 'Not found')
       return
     }
-    const { _id, name, email, createdAt, updatedAt } = user
-    JSONResponse.success(req, res, 'success', { _id, name, email, createdAt, updatedAt })
+
+    JSONResponse.success(req, res, 'success', user)
   } catch (error) {
     JSONResponse.serverError(req, res, 'system error')
   }

@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt'
 
 const userSchema = new Schema(
   {
-    email: { type: String, required: true, unique: true },
+    email: { type: String, required: true, unique: true, index: true, lowercase: true, trim: true },
     name: { type: String, required: true },
     password: { type: String, required: true },
     role: { type: String, default: 'user', enum: ['user', 'admin'] },

@@ -57,12 +57,8 @@ const GetUsers = async (req: Request): Promise<User[] | []> => {
         name: { $regex: req.query.name as string, $options: 'i' },
       }
     }
-    const data = await getUsers(filter)
-    const users: User[] = []
-    for (const { _id, name, email, role, createdAt, updatedAt } of data) {
-      users.push({ _id, name, email, role, createdAt, updatedAt })
-    }
-    return users
+
+    return await getUsers(filter)
   } catch (error: any) {
     throw error.message
   }
